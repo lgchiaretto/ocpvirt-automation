@@ -51,12 +51,14 @@ spec:
           guest: '{{ vm_memory }}Gi'
         resources: {}
       networks:
+{%- if attachpodnetwork == "true" +%}
         - name: 'default'
           pod: {}
+{%- endif +%}
 {%- if additionalnetwork != "" +%}
         - multus:
-            networkName: '{{ additionalnetwork }}'
-          name: '{{ additionalnetwork }}'
+            networkName: {{ additionalnetwork }}
+          name: {{ additionalnetwork }}
 {%- endif +%}
       terminationGracePeriodSeconds: 180
       volumes:
