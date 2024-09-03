@@ -60,7 +60,7 @@ spec:
         - cloudInitNoCloud:
             userData: |
               #cloud-config
-              user: 'cloud-user'
+              user: '{{ vm_username }}'
               password: '{{ vm_password }}'
               chpasswd: { expire: False }
               ssh_pwauth: True
