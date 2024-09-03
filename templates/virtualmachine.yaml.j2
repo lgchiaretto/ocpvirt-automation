@@ -58,7 +58,7 @@ spec:
 {%- if additionalnetwork != "" +%}
         - multus:
             networkName: {{ additionalnetwork }}
-          name: {{ additionalnetwork }}
+          name: 'multus-{{ app_name }}'
 {%- endif +%}
       terminationGracePeriodSeconds: 180
       volumes:
