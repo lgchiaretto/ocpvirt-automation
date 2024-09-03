@@ -1,0 +1,10 @@
+- name: Generate a unique 5-digit hash for this VM
+  ansible.builtin.set_fact:
+    vm_name: "{{ app_name }}-{{ 10000 + (99999 - 10000) | random }}"
+
+- name: Creating virtual machine
+
+  kubernetes.core.k8s:
+    kubeconfig: "/data/vms/clusters/dorky-flanders/auth/kubeconfig"
+    state: present
+    template: "virtualmachine.yaml.j2"

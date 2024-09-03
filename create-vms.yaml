@@ -1,0 +1,9 @@
+---
+- name: Create a Virtual Machine on OpenShift Virtualization
+  hosts: localhost
+  gather_facts: false
+  
+  tasks:
+    - name: Generate and create Virtual Machines with unique names
+      ansible.builtin.include_tasks: create-vms-tasks.yaml
+      with_sequence: count={{ n_vms }}
