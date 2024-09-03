@@ -5,6 +5,6 @@
 - name: Creating virtual machine
 
   kubernetes.core.k8s:
-    kubeconfig: "/data/vms/clusters/dorky-flanders/auth/kubeconfig"
+    kubeconfig: "/data/vms/clusters/{{ clustername }}/auth/kubeconfig"
     state: present
     template: "virtualmachine.yaml.j2"
