@@ -26,6 +26,7 @@ spec:
     metadata:
       labels:
         kubevirt.io/domain: '{{ vm_name }}'
+        app: '{{ app_name }}'
     spec:
       architecture: 'amd64'
       domain:
