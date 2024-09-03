@@ -43,9 +43,11 @@ spec:
                 bus: 'virtio'
               name: 'cloudinitdisk'
           interfaces:
+{%- if attachpodnetwork == "true" +%}
             - masquerade: {}
               model: 'virtio'
               name: 'default'
+{%- endif +%}
 {%- if additionalnetwork != "" +%}
             - bridge: {}
               model: virtio
