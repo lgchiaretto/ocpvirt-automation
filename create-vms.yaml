@@ -28,7 +28,7 @@
         kubeconfig: "/data/vms/clusters/{{ clustername }}/auth/kubeconfig"
         api_version: kubevirt.io/v1
         kind: VirtualMachineInstance
-        namespace: "{{ namespace }}"
+        namespace: "{{ vm_project }}"
         label_selectors:
           - app: "{{ app_name }}"
       register: vmi_list
