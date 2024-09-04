@@ -30,7 +30,7 @@
         kind: VirtualMachineInstance
         namespace: "{{ vm_project }}"
         label_selectors:
-          - app: {{ app_name }}
+          - app: "{{ app_name }}"
       register: vmi_list
 
     - name: Wait for the VM to have an IP address
