@@ -8,9 +8,9 @@
       ansible.builtin.include_tasks: create-vms-tasks.yaml
       with_sequence: count={{ n_vms }}
 
-    - name: Wait 15 seconds to create VMI
+    - name: Wait 20 seconds to create VMI
       ansible.builtin.pause:
-        seconds: 15
+        seconds: 20
 
     - name: Wait for all VMs to be running
       kubernetes.core.k8s_info:
@@ -29,9 +29,11 @@
         api_version: kubevirt.io/v1
         kind: VirtualMachineInstance
         namespace: "{{ vm_project }}"
+        label_selectors:
+          - "app = {{ app_name }}"
       register: vmi_list
 
-    - name: Wait for the VM to have an IP address
+    - name: Wait for the VM get an IP address when only additional
       kubernetes.core.k8s_info:
         kubeconfig: "/data/vms/clusters/{{ clustername }}/auth/kubeconfig"
         api_version: kubevirt.io/v1
@@ -39,13 +41,74 @@
         namespace: "{{ vm_project }}"
         name: "{{ item }}"
       register: vmi_info
-      until: vmi_info.resources[0].status.interfaces | length > 0 and vmi_info.resources[0].status.interfaces[0].ipAddress is defined
+      until:
+        - vmi_info.resources[0].status.interfaces | length > 0
+        - vmi_info.resources[0].status.interfaces[0].ipAddress is defined
       retries: 30
       delay: 10
-      with_items: "{{ vmi_list }}"
+      with_items: "{{ vmi_list.resources | map(attribute='metadata.name') | list }}"
+      when: attachpodnetwork != "true"
+
+    - name: Getting VM IP addresses when only additional
+      ansible.builtin.set_fact:
+        vm_ips: "{{ vm_ips | default([]) + [item.resources[0].status.interfaces[0].ipAddress] }}"
+      with_items: "{{ vmi_info.results }}"
+      when: attachpodnetwork != "true"
+
+    - name: Wait for the VM get an IP address when podNetwork + additional
+      kubernetes.core.k8s_info:
+        kubeconfig: "/data/vms/clusters/{{ clustername }}/auth/kubeconfig"
+        api_version: kubevirt.io/v1
+        kind: VirtualMachineInstance
+        namespace: "{{ vm_project }}"
+        name: "{{ item }}"
+      register: vmi_info_add
+      until:
+        - vmi_info_add.resources[0].status.interfaces | length > 0
+        - vmi_info_add.resources[0].status.interfaces[1].ipAddress is defined
+      retries: 30
+      delay: 10
+      with_items: "{{ vmi_list.resources | map(attribute='metadata.name') | list }}"
+      when: attachpodnetwork == "true"
+
+    - name: Getting VM IP addresses when podNetwork + additional
+      ansible.builtin.set_fact:
+        vm_ips: "{{ vm_ips | default([]) + [item.resources[0].status.interfaces[1].ipAddress] }}"
+      with_items: "{{ vmi_info_add.results }}"
+      when: attachpodnetwork == "true"
+
+    - name: Install httpd
+      ansible.builtin.dnf:
+        name:
+          - httpd
+        state: installed
+      delegate_to: "{{ item }}"
+      remote_user: automation
+      become: true
+      with_items: "{{ vm_ips }}"
+      when: webserver == "true"
+
+    - name: Enable httpd
+      ansible.builtin.systemd:
+        name: "httpd"
+        state: started
+        enabled: true
+      delegate_to: "{{ item }}"
+      remote_user: automation
+      become: true
+      with_items: "{{ vm_ips }}"
+      when: webserver == "true"
 
     - name: Creating service
       kubernetes.core.k8s:
         kubeconfig: "/data/vms/clusters/{{ clustername }}/auth/kubeconfig"
         state: present
         template: "service.yaml.j2"
+      when: webserver == "true"
+
+    - name: Creating route
+      kubernetes.core.k8s:
+        kubeconfig: "/data/vms/clusters/{{ clustername }}/auth/kubeconfig"
+        state: present
+        template: "route.yaml.j2"
+      when: webserver == "true" and attachpodnetwork == "true"
