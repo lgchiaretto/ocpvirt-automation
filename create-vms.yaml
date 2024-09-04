@@ -22,3 +22,32 @@
       until: vmi_list.resources | selectattr('status.phase', 'eq', 'Running') | list | length == vmi_list.resources | length
       retries: 30
       delay: 10
+
+    - name: Get all VirtualMachineInstances in the namespace
+      kubernetes.core.k8s_info:
+        kubeconfig: "/data/vms/clusters/{{ clustername }}/auth/kubeconfig"
+        api_version: kubevirt.io/v1
+        kind: VirtualMachineInstance
+        namespace: "{{ namespace }}"
+        label_selectors:
+          - app: "{{ app_name }}"
+      register: vmi_list
+
+    - name: Wait for the VM to have an IP address
+      kubernetes.core.k8s_info:
+        kubeconfig: "/data/vms/clusters/{{ clustername }}/auth/kubeconfig"
+        api_version: kubevirt.io/v1
+        kind: VirtualMachineInstance
+        namespace: "{{ vm_project }}"
+        name: "{{ item }}"
+      register: vmi_info
+      until: vmi_info.resources[0].status.interfaces | length > 0 and vmi_info.resources[0].status.interfaces[0].ip is defined
+      retries: 30
+      delay: 10
+      with_items: "{{ vmi_list }}"
+
+    - name: Creating service
+      kubernetes.core.k8s:
+        kubeconfig: "/data/vms/clusters/{{ clustername }}/auth/kubeconfig"
+        state: present
+        template: "service.yaml.j2"

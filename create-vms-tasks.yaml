@@ -3,7 +3,6 @@
     vm_name: "{{ app_name }}-{{ 10000 + (99999 - 10000) | random }}"
 
 - name: Creating virtual machine
-
   kubernetes.core.k8s:
     kubeconfig: "/data/vms/clusters/{{ clustername }}/auth/kubeconfig"
     state: present

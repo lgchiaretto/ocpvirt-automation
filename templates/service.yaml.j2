@@ -1,0 +1,20 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ app_name }}
+  namespace: {{ app_project }}
+  labels:
+    app: {{ app_name }}
+spec:
+  externalTrafficPolicy: Cluster
+  ipFamilies:
+    - IPv4
+  ports:
+    - name: 8080-80
+      protocol: TCP
+      port: 8080
+      targetPort: 80
+  internalTrafficPolicy: Cluster
+  type: clusterIP
+  selector:
+    app: {{ app_name }}
