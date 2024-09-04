@@ -39,7 +39,7 @@
         namespace: "{{ vm_project }}"
         name: "{{ item }}"
       register: vmi_info
-      until: vmi_info.resources[0].status.interfaces | length > 0 and vmi_info.resources[0].status.interfaces[0].ip is defined
+      until: vmi_info.resources[0].status.interfaces | length > 0 and vmi_info.resources[0].status.interfaces[0].ipAddress is defined
       retries: 30
       delay: 10
       with_items: "{{ vmi_list }}"
