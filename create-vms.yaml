@@ -29,8 +29,6 @@
         api_version: kubevirt.io/v1
         kind: VirtualMachineInstance
         namespace: "{{ vm_project }}"
-        label_selectors:
-          - app: "{{ app_name }}"
       register: vmi_list
 
     - name: Wait for the VM to have an IP address
