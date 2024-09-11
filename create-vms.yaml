@@ -1,6 +1,6 @@
 ---
 - name: Create a Virtual Machine on OpenShift Virtualization
-  hosts: localhost
+  hosts: p1-local.chiaret.to
   gather_facts: false
 
   tasks:
