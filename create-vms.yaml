@@ -23,46 +23,30 @@
       retries: 30
       delay: 10
 
-    - name: Get all VirtualMachineInstances in the namespace
+#    - name: Get all VirtualMachineInstances in the namespace
+#      kubernetes.core.k8s_info:
+#        kubeconfig: "/data/vms/clusters/{{ clustername }}/auth/kubeconfig"
+#        api_version: kubevirt.io/v1
+#        kind: VirtualMachineInstance
+#        namespace: "{{ vm_project }}"
+#        label_selectors:
+#          - "app = {{ app_name }}"
+#      register: vmi_list
+
+    - name: Wait for all pods to be Ready to use
       kubernetes.core.k8s_info:
         kubeconfig: "/data/vms/clusters/{{ clustername }}/auth/kubeconfig"
-        api_version: kubevirt.io/v1
-        kind: VirtualMachineInstance
         namespace: "{{ vm_project }}"
+        kind: pod
         label_selectors:
           - "app = {{ app_name }}"
-      register: vmi_list
-
-    - name: Wait for the VM get an IP address
-      kubernetes.core.k8s_info:
-        kubeconfig: "/data/vms/clusters/{{ clustername }}/auth/kubeconfig"
-        api_version: kubevirt.io/v1
-        kind: VirtualMachineInstance
-        namespace: "{{ vm_project }}"
-        name: "{{ item }}"
-      register: vmi_info
-      until:
-        - vmi_info.resources[0].status.interfaces[0].ipAddress is defined
-        - vmi_info.resources[0].status.interfaces | selectattr('ipAddress', 'match', '^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$') | length > 0
+      register: pod_info
+      until: >
+        pod_info.resources | selectattr('status.containerStatuses', 'defined') |
+        selectattr('status.containerStatuses', 'min', 'ready', true) |
+        length == pod_info.resources | length
       retries: 30
       delay: 10
-      with_items: "{{ vmi_list.resources | map(attribute='metadata.name') | list }}"
-
-    - name: Getting VM IP addresses
-      ansible.builtin.set_fact:
-        vm_ips: "{{ vm_ips | default([]) + [item.resources[0].status.interfaces[0].ipAddress] }}"
-      with_items: "{{ vmi_info.results }}"
-
-    - name: Wait for port 8080 to be open on VM
-      ansible.builtin.wait_for:
-        host: "{{ item }}"
-        port: 8080
-        timeout: 120
-        state: started
-      register: open_port_8080
-      with_items: "{{ vm_ips }}"
-      async: 180
-      poll: 0
 
     - name: Creating service
       kubernetes.core.k8s:
