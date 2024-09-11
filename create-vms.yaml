@@ -1,6 +1,6 @@
 ---
 - name: Create a Virtual Machine on OpenShift Virtualization
-  hosts: p1-local.chiaret.to
+  hosts: localhost
   gather_facts: false
 
   tasks:
@@ -23,17 +23,17 @@
       retries: 30
       delay: 10
 
-#    - name: Get all VirtualMachineInstances in the namespace
-#      kubernetes.core.k8s_info:
-#        kubeconfig: "/data/vms/clusters/{{ clustername }}/auth/kubeconfig"
-#        api_version: kubevirt.io/v1
-#        kind: VirtualMachineInstance
-#        namespace: "{{ vm_project }}"
-#        label_selectors:
-#          - "app = {{ app_name }}"
-#      register: vmi_list
+    - name: Get all VirtualMachineInstances in the namespace
+      kubernetes.core.k8s_info:
+        kubeconfig: "/data/vms/clusters/{{ clustername }}/auth/kubeconfig"
+        api_version: kubevirt.io/v1
+        kind: VirtualMachineInstance
+        namespace: "{{ vm_project }}"
+        label_selectors:
+          - "app = {{ app_name }}"
+      register: vmi_list
 
-    - name: Wait for all pods to be Ready to use
+    - name: Gather all pods in the namespace
       kubernetes.core.k8s_info:
         kubeconfig: "/data/vms/clusters/{{ clustername }}/auth/kubeconfig"
         namespace: "{{ vm_project }}"
@@ -41,10 +41,8 @@
         label_selectors:
           - "app = {{ app_name }}"
       register: pod_info
-      until: >
-        pod_info.resources | selectattr('status.containerStatuses', 'defined') |
-        selectattr('status.containerStatuses', 'min', 'ready', true) |
-        length == pod_info.resources | length
+      until: |
+        "pod_info.resources[0].status.containerStatuses | selectattr('ready', 'equalto', true) | list | length == pod_info.resources[0].spec.containers | length"
       retries: 30
       delay: 10
 
