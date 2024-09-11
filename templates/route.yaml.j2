@@ -1,6 +1,8 @@
 apiVersion: route.openshift.io/v1                                                                                                                                                                                                                             
 kind: Route
 metadata:
+  annotations:
+    haproxy.router.openshift.io/balance: roundrobin
   labels:
     app: "{{ app_name }}"
     app.kubernetes.io/component: "{{ app_name }}"
