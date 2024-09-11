@@ -10,7 +10,7 @@ metadata:
 spec:
   host: "{{ app_name }}.apps.{{ clustername }}.{{ basedomain }}"
   port:
-    targetPort: 8080-80
+    targetPort: 8080-tcp
   tls:
     insecureEdgeTerminationPolicy: Redirect
     termination: edge

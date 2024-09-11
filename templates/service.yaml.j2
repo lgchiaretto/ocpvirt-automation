@@ -7,10 +7,10 @@ metadata:
   namespace: {{ vm_project }}
 spec:
   ports:
-  - name: 8080-80
+  - name: 8080-tcp
     port: 8080
     protocol: TCP
-    targetPort: 80
+    targetPort: 8080
   selector:
     app: {{ app_name }}
   type: ClusterIP
