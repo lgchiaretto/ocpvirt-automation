@@ -6,6 +6,12 @@ metadata:
   name: '{{ vm_name }}'
   namespace: '{{ vm_project }}'
 spec:
+  readinessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 20
+    tcpSocket:
+      port: 8080
+    timeoutSeconds: 10
   dataVolumeTemplates:
     - apiVersion: 'cdi.kubevirt.io/v1beta1'
       kind: 'DataVolume'
