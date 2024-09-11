@@ -43,30 +43,16 @@ spec:
                 bus: 'virtio'
               name: 'cloudinitdisk'
           interfaces:
-{%- if attachpodnetwork == "true" +%}
             - masquerade: {}
               model: 'virtio'
               name: 'default'
-{%- endif +%}
-{%- if additionalnetwork != "" +%}
-            - bridge: {}
-              model: virtio
-              name: '{{ additionalnetwork }}'
-{%- endif +%}
           rng: {}
         memory:
           guest: '{{ vm_memory }}Gi'
         resources: {}
       networks:
-{%- if attachpodnetwork == "true" +%}
         - name: 'default'
           pod: {}
-{%- endif +%}
-{%- if additionalnetwork != "" +%}
-        - multus:
-            networkName: '{{ additionalnetwork }}'
-          name: '{{ additionalnetwork }}'
-{%- endif +%}
       terminationGracePeriodSeconds: 180
       volumes:
         - dataVolume:
@@ -81,4 +67,16 @@ spec:
               ssh_pwauth: True
               ssh_authorized_keys:
                 - {{ ssh_rsa }}
+              package_update: true
+              packages:
+                - python3
+                - git
+              runcmd:
+                - mkdir -p /usr/src/app
+                - git clone https://github.com/lgchiaretto/demo-print-hostname.git /usr/src/app
+                - cp /usr/src/app/webserver.service /etc/systemd/system/
+                - systemctl daemon-reload
+                - systemctl enable webserver.service
+                - systemctl start webserver.service
+              final_message: "The Python web server is set up and running"
           name: 'cloudinitdisk'
