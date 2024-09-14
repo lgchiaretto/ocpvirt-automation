@@ -1,0 +1,15 @@
+---
+- name: Create a Virtual Machine on OpenShift Virtualization
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Creating route
+      kubernetes.core.k8s_info:
+        api_version: v1
+        name: namespace
+      register: namespaces
+
+    - name: Dbug
+      ansible.builtin.debug:
+        var: "{{ namespaces }}"
